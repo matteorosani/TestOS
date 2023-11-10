@@ -1,6 +1,8 @@
 mod color;
 mod buffer;
 mod writer;
+#[cfg(test)]
+mod test;
 
 use lazy_static::lazy_static;
 use spin::Mutex;
@@ -32,5 +34,10 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: core::fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    use x86_64::instructions::interrupts::without_interrupts;
+
+    // Disables interrupts during the printing to prevent deadlocks
+    without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    });
 }

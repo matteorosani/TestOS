@@ -4,7 +4,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use test_os::{QemuExitCode, exit_qemu, serial_println, serial_print};
+use test_os::{test::{QemuExitCode, exit_qemu}, serial_println, serial_print};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {

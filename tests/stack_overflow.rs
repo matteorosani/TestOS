@@ -5,7 +5,7 @@
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use x86_64::structures::idt::InterruptDescriptorTable;
-use test_os::{exit_qemu, QemuExitCode, serial_println, serial_print};
+use test_os::{test::{exit_qemu, QemuExitCode}, serial_println, serial_print};
 use x86_64::structures::idt::InterruptStackFrame;
 
 lazy_static! {
@@ -49,7 +49,7 @@ pub extern "C" fn _start() -> ! {
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    test_os::test_panic_handler(info)
+    test_os::test::test_panic_handler(info)
 }
 
 #[allow(unconditional_recursion)]

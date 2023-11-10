@@ -5,6 +5,9 @@ use super::{ColorCode, buffer::{Buffer, ScreenChar}, BUFFER_WIDTH, BUFFER_HEIGHT
 pub struct Writer {
     column_position: usize,
     color_code: ColorCode,
+    #[cfg(test)]
+    pub buffer: &'static mut Buffer,
+    #[cfg(not(test))]
     buffer: &'static mut Buffer,
 }
 
@@ -21,7 +24,7 @@ impl Writer {
         match byte {
             b'\n' => self.new_line(),
             byte => {
-                if self.column_position > BUFFER_WIDTH {
+                if self.column_position >= BUFFER_WIDTH {
                     self.new_line();
                 }
                 let row = BUFFER_HEIGHT - 1;
