@@ -5,17 +5,27 @@
 #![test_runner(crate::test::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+#[cfg(test)]
+use bootloader::entry_point;
+
+use bootloader::BootInfo;
+use x86_64::VirtAddr;
+
 pub mod serial;
 pub mod vga;
 pub mod interrupts;
 pub mod gdt;
 pub mod test;
+pub mod memory;
 
-/// Entry point for `cargo test`
+
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    init();
+entry_point!(kmain);
+
+#[cfg(test)]
+/// Entry point for `cargo test`
+fn kmain(boot_info: &'static BootInfo) -> ! {
+    init(boot_info);
     test_main();
     hlt_loop();
 }
@@ -32,7 +42,10 @@ pub fn hlt_loop() -> ! {
     }
 }
 
-pub fn init() {
+pub fn init(boot_info: &'static BootInfo) {
     gdt::init();
     interrupts::init();
+    unsafe {
+        memory::init(VirtAddr::new(boot_info.physical_memory_offset));
+    }
 }

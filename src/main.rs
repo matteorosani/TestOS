@@ -6,12 +6,15 @@
 
 use core::panic::PanicInfo;
 use test_os::println;
+use bootloader::{BootInfo, entry_point};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+
+entry_point!(kmain);
+
+fn kmain(boot_info: &'static BootInfo) -> ! {
     println!("Hello World!");
 
-    test_os::init();
+    test_os::init(boot_info);
 
     #[cfg(test)]
     test_main();
