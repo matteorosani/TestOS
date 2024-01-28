@@ -2,6 +2,7 @@
 #![cfg_attr(test, no_main)]
 #![feature(custom_test_frameworks)]
 #![feature(abi_x86_interrupt)]
+#![feature(const_mut_refs)]
 #![test_runner(crate::test::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
@@ -9,7 +10,7 @@
 use bootloader::entry_point;
 
 use bootloader::BootInfo;
-use x86_64::VirtAddr;
+extern crate alloc;
 
 pub mod serial;
 pub mod vga;
@@ -45,7 +46,13 @@ pub fn hlt_loop() -> ! {
 pub fn init(boot_info: &'static BootInfo) {
     gdt::init();
     interrupts::init();
-    unsafe {
-        memory::init(VirtAddr::new(boot_info.physical_memory_offset));
-    }
+    let mut page_table = unsafe {
+        memory::init_page_table(boot_info)
+    };
+    let mut frame_allocator = unsafe {
+        memory::init_frame_allocator(boot_info)
+    };
+
+
+    memory::heap::init(&mut page_table, &mut frame_allocator).expect("Heap initialization failed");
 }
