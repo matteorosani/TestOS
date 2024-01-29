@@ -47,10 +47,32 @@ impl FreeListAllocator {
         assert!(size >= size_of::<FreeListNode>());
 
         let mut node = FreeListNode::new(size);
-        node.next = self.head.next.take();
         let node_ptr = start_addr as *mut FreeListNode;
+
+        let mut current = &mut self.head;
+
+        while current.next.is_some() && current.next.as_ref().map(|x| x.start_addr()).unwrap() < start_addr {
+            current = current.next.as_mut().unwrap();
+        }
+        node.next = current.next.take();
         node_ptr.write(node);
-        self.head.next = Some(&mut *node_ptr);
+        current.next = Some(&mut *node_ptr);
+
+        self.merge_regions()
+    }
+
+    fn merge_regions(&mut self) {
+        let mut current = &mut self.head;
+
+        while current.next.is_some() {
+            if current.end_addr() == current.next.as_ref().unwrap().start_addr() {
+                let next = current.next.take().unwrap();
+                current.size += next.size;
+                current.next = next.next.take();
+            } else {
+                current = current.next.as_mut().unwrap();
+            }
+        }
     }
 
     fn find_region(&mut self, size: usize, align: usize) -> Option<(&'static mut FreeListNode, usize)> {
@@ -139,9 +161,6 @@ unsafe impl GlobalAlloc for Locked<FreeListAllocator> {
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         // perform layout adjustments
         let (size, _) = FreeListAllocator::size_align(layout);
-        //TODO: Merge regions
-        //To do it we should keep the list ordered by start_address
-        //and merge two regions if they are continuous
         self.lock().add_free_region(ptr as usize, size)
     }
 }

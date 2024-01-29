@@ -40,18 +40,7 @@ pub fn init(
     Ok(())
 }
 
+///Works only if align is power of 2
 fn align_up(addr: usize, align: usize) -> usize {
-    let remainder = addr % align;
-    if remainder == 0 {
-        addr // addr already aligned
-    } else {
-        addr - remainder + align
-    }
-}
-
-/// Align the given address `addr` upwards to alignment `align`.
-///
-/// Requires that `align` is a power of two.
-fn align_up_power_of_two(addr: usize, align: usize) -> usize {
     (addr + align - 1) & !(align - 1)
 }
